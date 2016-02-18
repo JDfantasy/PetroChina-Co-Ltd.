@@ -1,5 +1,5 @@
 //
-//  RepairViewController.h
+//  RegistViewController.h
 //  CN
 //
 //  Created by PetroChina Co Ltd on 16/1/22.
@@ -8,6 +8,6 @@
 
 #import "BaseViewController.h"
 
-@interface RepairViewController : BaseViewController
+@interface RegistViewController : BaseViewController
 
 @end

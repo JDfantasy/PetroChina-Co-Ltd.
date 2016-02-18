@@ -147,7 +147,7 @@ static int i=100;
 
 #pragma mark - 点击完成按钮
 - (void)finishPage:(UIButton *)button{
-    /*
+
      for (UIView *tmpview in [self.view subviews]){
      
      for (id secondview in tmpview.subviews) {
@@ -159,12 +159,11 @@ static int i=100;
      
      RegistViewController *regist=[[RegistViewController alloc]init];
      [self.navigationController pushViewController:regist animated:YES];
-     
      }
      }
      }
      }
-     */
+
     
     if ([_textField.text isEqualToString:@""]) {
         
@@ -187,6 +186,80 @@ static int i=100;
         RegistViewController *regist=[[RegistViewController alloc]init];
         [self.navigationController pushViewController:regist animated:YES];
     }
+    
+//******************************************************
+    
+    NSString * username=userText.text;
+    NSString * password=passText.text;
+    username=[GJDUtil trim:username];
+    password=[GJDUtil trim:password];
+    if(username.length==0)
+    {
+        userText.text=@"";
+        [userText becomeFirstResponder];
+        [GJDUtil alertWithMessage:@"账号不能为空！" andWithVC:self];
+        return;
+    }
+    if(password.length==0)
+    {
+        passText.text=@"";
+        [passText becomeFirstResponder];
+        [GJDUtil alertWithMessage:@"密码不能为空！" andWithVC:self];
+        return;
+    }
+    //注册http://101.201.210.95:8080/cnpcmms/api/register?username=&name=%E9%AB%99%E7%BB%A7%E5%BE%B7&company=%E5%AE%87%E4%BF%A1%E6%99%BA%E8%87%BB&identification=232332199204080915&password=568917189&phone=18519194438&mobile=18245562716&type=site
+    //   http://101.201.210.95:8080/cnpcmms/api/register?username=51776&name=%E9%AB%99%E7%BB%A7%E5%BE%B7&company=%E6%99%BA%E6%9E%97%E5%8D%9A%E5%B9%B3&identification=232332199204080911&password=%@&phone=18245562715&mobile=%@&type=site
+    
+    
+    NSURL * url=[NSURL URLWithString:@"http://101.201.210.95:8080/cnpcmms/api/register"];
+    //动态请求
+    NSMutableURLRequest * request=[NSMutableURLRequest requestWithURL:url];
+    //设置请求方式为post
+    [request setHTTPMethod:@"post"];
+    NSString * parameter=[NSString stringWithFormat:@"username=19921021&name=%@&identification=232332199204080911&password=%@&phone=182455627155&mobile=%@&type=site",@"%E9%AB%99%E7%BB%A7%E5%BE%B7&company=%E6%99%BA%E6%9E%97%E5%8D%9A%E5%B9%B3",password,username];
+    //设置请求参数
+    [request setHTTPBody:[parameter dataUsingEncoding:NSUTF8StringEncoding]];
+    //会话
+    NSURLSession * session=[NSURLSession sharedSession];
+    //任务
+    NSURLSessionDataTask * task=[session dataTaskWithRequest:request completionHandler:^(NSData * _Nullable data, NSURLResponse * _Nullable response, NSError * _Nullable error) {
+        dispatch_async(dispatch_get_main_queue(), ^{
+            [SVProgressHUD dismiss];
+        });
+        if(error==nil && data)
+        {
+            NSString * str=[[NSString alloc]initWithData:data encoding:NSUTF8StringEncoding];
+            if([str containsString:@"用户名已被注册"])
+            {
+                dispatch_async(dispatch_get_main_queue(), ^{
+                    [GJDUtil alertWithMessage:@"对不起，用户已经存在了!" andWithVC:self];
+                });
+            }
+            else if([str containsString:@"恭喜您，账号注册成功！"])
+            {
+                dispatch_async(dispatch_get_main_queue(), ^{
+                    [GJDUtil alertWithMessage:@"恭喜你，注册成功了!" andWithVC:self];
+                });
+            }
+            else
+            {
+                dispatch_async(dispatch_get_main_queue(), ^{
+                    [GJDUtil alertWithMessage:@"对不起，注册失败了!" andWithVC:self];
+                });
+            }
+        }
+        else
+        {
+            dispatch_async(dispatch_get_main_queue(), ^{
+                [GJDUtil alertWithMessage:@"请求失败!" andWithVC:self];
+            });
+        }
+    }];
+    [SVProgressHUD showWithStatus:@"正在注册，请稍候..." maskType:SVProgressHUDMaskTypeBlack];
+    
+    //启动任务
+    [task resume];
+    NSLog(@"main");
 }
 
 #pragma mark - 正则匹配用户分身证号
@@ -239,6 +312,10 @@ static int i=100;
     }
 }
 
+#pragma mark -- 完成按钮
+-(void)registerTap:(UIButton * )sender{
+    
+}
 
 - (void)didReceiveMemoryWarning {
     [super didReceiveMemoryWarning];
